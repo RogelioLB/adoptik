@@ -1,1 +1,0 @@
-Este archivo simula un video de muestra para la aplicación estilo TikTok.
