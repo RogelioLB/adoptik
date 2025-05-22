@@ -1,4 +1,6 @@
 ---
+import AnimalModal from './AnimalModal.astro';
+
 interface Props {
   videoSrc?: string;
   likes?: number;
@@ -40,6 +42,18 @@ const {
       <video src={videoSrc} autoplay loop muted playsinline class="w-full h-full object-contain"></video>
     )}
     
+    <!-- Badge de Adoptar ahora -->
+    <div class="absolute bottom-28 left-1/2 -translate-x-1/2 z-10">
+      <button id="openModalBtn" class="inline-flex items-center gap-2 py-3 px-6 rounded-full bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-500 text-white font-bold text-base shadow-lg transform hover:scale-105 transition-transform duration-300 animate-pulse border-2 border-white/30">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-5 h-5" fill="currentColor">
+          <path d="M226.5 92.9c14.3 42.9-.3 86.2-32.6 96.8s-70.1-15.6-84.4-58.5s.3-86.2 32.6-96.8s70.1 15.6 84.4 58.5z"/>
+          <path d="M100.4 198.6c18.9 32.4 14.3 70.1-10.2 84.1s-59.7-.9-78.5-33.3S-2.7 179.3 21.8 165.3s59.7 .9 78.5 33.3z"/>
+          <path d="M69.2 401.2C121.6 259.9 214.7 224 256 224s134.4 35.9 186.8 177.2c3.6 9.7 5.2 20.1 5.2 30.5v1.6c0 25.8-20.9 46.7-46.7 46.7c-11.5 0-22.9-1.4-34-4.2l-88-22c-15.3-3.8-31.3-3.8-46.6 0l-88 22c-11.1 2.8-22.5 4.2-34 4.2C84.9 480 64 459.1 64 433.3v-1.6c0-10.4 1.6-20.8 5.2-30.5z"/>
+        </svg>
+        Adoptar ahora
+      </button>
+    </div>
+    
     <div class="absolute right-3 bottom-[20%] flex flex-col gap-5">
       <div class="flex flex-col items-center gap-1">
         <button class="bg-transparent border-none text-white cursor-pointer p-2 rounded-full flex items-center justify-center transition-all duration-200 hover:bg-white/10 group">
@@ -72,4 +86,7 @@ const {
       </div>
     </div>
   </div>
+
+  <!-- Modal de información del animal -->
+  <AnimalModal />
 </div>
