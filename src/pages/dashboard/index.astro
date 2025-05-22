@@ -1,0 +1,47 @@
+---
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { CiSettings } from "react-icons/ci";
+
+import Layout from "../../layouts/Layout.astro";
+import CardEstadistica from "../../components/CardEstadistica.astro";
+---
+
+<Layout>
+  <header class="bg-slate-400">
+    <nav class="flex justify-between p-4">
+      <button class="text-3xl"><FaArrowLeft /></button>
+      <h1 class="font-bold text-xl">Adoptik</h1>
+      <button class="text-3xl"><CiSettings /></button>
+    </nav>
+  </header>
+  <main class="p-4 flex flex-col sm:flex-row gap-4">
+    <div>
+      <div class="flex justify-between">
+        <h2 class="font-bold text-xl">Estadisticas</h2>
+        <button class="flex items-center gap-4 text-gray-600 text-xl"
+          >Ver todo<FaArrowRight /></button
+        >
+      </div>
+
+      <section class="grid grid-cols-3 sm:flex sm:flex-col gap-2">
+        <CardEstadistica
+          stat={50}
+          text="Numero de adopciones por mes"
+          percentage={50}
+        />
+        <CardEstadistica
+          stat={25}
+          text="Adopciones aprobadas"
+          percentage={25}
+        />
+        <CardEstadistica stat={5} text="Adopciones rechazadas" percentage={5} />
+      </section>
+    </div>
+  </main>
+  <style>
+    body {
+      background-color: white;
+      color: black;
+    }
+  </style>
+</Layout>
