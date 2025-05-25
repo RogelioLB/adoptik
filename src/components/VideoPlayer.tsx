@@ -35,6 +35,10 @@ export default function VideoPlayer({
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [isVideoPaused, setIsVideoPaused] = useState<boolean>(false);
+  const [showPlayButton, setShowPlayButton] = useState<boolean>(true);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const hidePlayButtonTimeout = useRef<NodeJS.Timeout | null>(null);
   const modalTimerRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollAnimationFrameRef = useRef<number | null>(null);
@@ -51,8 +55,19 @@ export default function VideoPlayer({
       if (scrollAnimationFrameRef.current) {
         cancelAnimationFrame(scrollAnimationFrameRef.current);
       }
+      if (hidePlayButtonTimeout.current) {
+        clearTimeout(hidePlayButtonTimeout.current);
+      }
     };
   }, []);
+
+  // Efecto para actualizar el estado de pausa cuando cambia el video
+  useEffect(() => {
+    const video = videoRefs.current[currentIndex];
+    if (video) {
+      setIsVideoPaused(video.paused);
+    }
+  }, [currentIndex]);
 
   // Evitar que el scroll del cuerpo cuando el modal está abierto
   useEffect(() => {
@@ -170,11 +185,11 @@ export default function VideoPlayer({
   const handleScroll = useCallback(() => {
     // Ignorar si estamos haciendo scroll programático
     if (isScrollingRef.current || !containerRef.current) return;
-    
+
     const { scrollTop, scrollHeight } = containerRef.current;
     const videoHeight = scrollHeight / videos.length;
     const currentVideoIndex = Math.round(scrollTop / videoHeight);
-    
+
     // Solo actualizar si hay un cambio significativo
     if (currentVideoIndex !== currentIndex) {
       setCurrentIndex(currentVideoIndex);
@@ -184,36 +199,62 @@ export default function VideoPlayer({
   // Efecto para manejar el scroll al cambiar de video
   useEffect(() => {
     if (!containerRef.current || isScrollingRef.current) return;
-    
+
     // Bloquear actualizaciones mientras hacemos scroll programático
     isScrollingRef.current = true;
-    
+
     const videoHeight = containerRef.current.scrollHeight / videos.length;
     const targetScroll = currentIndex * videoHeight;
-    
+
     // Usar scrollTo con behavior: 'smooth' para una transición suave
     containerRef.current.scrollTo({
       top: targetScroll,
-      behavior: "smooth"
+      behavior: "smooth",
     });
-    
+
     // Actualizar reproducción de videos
-    const videoElements = document.querySelectorAll("video");
-    videoElements.forEach((video, index) => {
+    videoRefs.current.forEach((video, index) => {
+      if (!video) return;
+
       if (index === currentIndex) {
-        video.play().catch(e => console.log("Error al reproducir:", e));
+        video.play().catch((e) => console.log("Error al reproducir:", e));
+        setIsVideoPaused(false);
       } else {
         video.pause();
       }
     });
-    
+
     // Desbloquear después de la animación
     const timer = setTimeout(() => {
       isScrollingRef.current = false;
-    }, 500); // Tiempo de la animación de scroll
-    
+    }, 500);
+
     return () => clearTimeout(timer);
   }, [currentIndex, videos.length]);
+
+  // Manejar play/pausa del video
+  const togglePlayPause = useCallback(() => {
+    const video = videoRefs.current[currentIndex];
+    if (!video) return;
+
+    if (video.paused) {
+      video.play().catch((e) => console.log("Error al reproducir:", e));
+      setIsVideoPaused(false);
+    } else {
+      video.pause();
+      setIsVideoPaused(true);
+    }
+
+    // Mostrar el botón de play/pausa
+    setShowPlayButton(true);
+    // Ocultar después de 1 segundo
+    if (hidePlayButtonTimeout.current) {
+      clearTimeout(hidePlayButtonTimeout.current);
+    }
+    hidePlayButtonTimeout.current = setTimeout(() => {
+      setShowPlayButton(false);
+    }, 1000);
+  }, [currentIndex]);
 
   // Manejar scroll táctil
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -232,10 +273,101 @@ export default function VideoPlayer({
         // Deslizamiento hacia abajo - video anterior
         goToPrevVideo();
       }
+    } else {
+      // Si el desplazamiento es pequeño, manejar como toque para play/pausa
+      togglePlayPause();
     }
   };
 
+  // Referencia para evitar múltiples toques rápidos
+  const isHandlingClick = useRef(false);
 
+  // Manejar clic en el video
+  const handleVideoClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+
+      if (isHandlingClick.current) return;
+      isHandlingClick.current = true;
+
+      const video = videoRefs.current[currentIndex];
+      if (!video) {
+        isHandlingClick.current = false;
+        return;
+      }
+
+      // Cambiar el estado inmediatamente para feedback visual
+      const wasPaused = video.paused;
+      setIsVideoPaused(!wasPaused);
+      setShowPlayButton(true);
+
+      // Limpiar timeout anterior si existe
+      if (hidePlayButtonTimeout.current) {
+        clearTimeout(hidePlayButtonTimeout.current);
+      }
+
+      // Ocultar botón después de 1 segundo
+      hidePlayButtonTimeout.current = setTimeout(() => {
+        setShowPlayButton(false);
+      }, 1000);
+
+      // Manejar la reproducción/pausa
+      try {
+        if (wasPaused) {
+          video.play().then(() => {
+            // Asegurarse de que el estado sea consistente después de la reproducción
+            if (!video.paused) {
+              setIsVideoPaused(false);
+            }
+          });
+        } else {
+          video.pause();
+          // No necesitamos then() aquí ya que pausar es síncrono
+        }
+      } catch (error) {
+        console.error("Error al controlar el video:", error);
+      } finally {
+        // Permitir el próximo clic después de un pequeño retraso
+        setTimeout(() => {
+          isHandlingClick.current = false;
+        }, 200);
+      }
+    },
+    [currentIndex]
+  );
+
+  // Manejar evento play del video
+  const handlePlay = useCallback(() => {
+    // Solo actualizar si el video realmente está reproduciéndose
+    const video = videoRefs.current[currentIndex];
+    if (video && !video.paused) {
+      setIsVideoPaused(false);
+    }
+  }, [currentIndex]);
+
+  // Manejar evento pause del video
+  const handlePause = useCallback(() => {
+    // Solo actualizar si el video realmente está pausado
+    const video = videoRefs.current[currentIndex];
+    if (video && video.paused) {
+      setIsVideoPaused(true);
+    }
+  }, [currentIndex]);
+
+  // Mostrar el botón al pasar el ratón por encima
+  const handleMouseEnter = useCallback(() => {
+    setShowPlayButton(true);
+  }, []);
+
+  // Ocultar el botón después de un tiempo
+  const handleMouseLeave = useCallback(() => {
+    if (hidePlayButtonTimeout.current) {
+      clearTimeout(hidePlayButtonTimeout.current);
+    }
+    hidePlayButtonTimeout.current = setTimeout(() => {
+      setShowPlayButton(false);
+    }, 1000);
+  }, []);
 
   // Renderizar solo los videos cercanos al actual para mejor rendimiento
   // Obtener el video actual
@@ -246,7 +378,7 @@ export default function VideoPlayer({
       {/* Contenedor de videos con scroll */}
       <div
         ref={containerRef}
-        className="w-full h-screen overflow-y-auto relative bg-black"
+        className="w-full h-dvh overflow-y-auto relative bg-black"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onScroll={handleScroll}
@@ -261,25 +393,36 @@ export default function VideoPlayer({
           <div
             key={video.id}
             id={`video-${index}`}
-            className="w-full h-screen flex items-center justify-center relative"
-            style={{
-              minHeight: "100vh"
-            }}
+            className={`relative w-full h-full flex items-center justify-center`}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
           >
-            <div className="w-full md:max-w-md mx-auto h-full flex md:items-center md:justify-center">
+            <div
+              className="w-full md:max-w-md mx-auto h-full flex md:items-center md:justify-center"
+              onClick={() => setShowModal(true)}
+            >
               <div
-                className="relative w-full"
-                style={{ aspectRatio: "9/16", maxHeight: "100vh" }}
+                className="w-full h-full bg-black relative overflow-hidden"
+                style={{
+                  aspectRatio: "9/16",
+                  maxHeight: "calc(100vh - 60px)",
+                  margin: "0 auto",
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
               >
                 <video
                   ref={(el) => {
+                    videoRefs.current[index] = el;
                     if (el) {
-                      if (index !== currentIndex) {
-                        el.pause();
-                      } else if (el.paused) {
+                      if (index === currentIndex && !el.paused) {
                         el.play().catch((e) =>
                           console.log("Error al reproducir:", e)
                         );
+                        setIsVideoPaused(false);
+                      } else {
+                        el.pause();
                       }
                     }
                   }}
@@ -287,14 +430,47 @@ export default function VideoPlayer({
                   className="absolute inset-0 w-full h-full object-cover"
                   autoPlay={index === currentIndex}
                   loop
-                  muted
-                  playsInline
-                  onPlay={() => {
-                    document.querySelectorAll("video").forEach((v, i) => {
-                      if (i !== currentIndex) v.pause();
-                    });
-                  }}
+                  onPlay={handlePlay}
+                  onPause={handlePause}
+                  onEnded={handlePause}
+                  onSeeking={handlePause}
+                  onSeeked={handlePlay}
+                  onWaiting={handlePause}
+                  onPlaying={handlePlay}
                 />
+                {/* Botón de play/pausa superpuesto */}
+                <div className="absolute inset-0 flex items-center justify-center cursor-pointer">
+                  <div
+                    className={`transition-opacity duration-300 ${
+                      showPlayButton ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    {isVideoPaused ? (
+                      <div className="w-20 h-20 bg-black/50 rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-12 h-12 text-white"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    ) : (
+                      showPlayButton && (
+                        <div className="w-20 h-20 bg-black/50 rounded-full flex items-center justify-center">
+                          <svg
+                            className="w-12 h-12 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <rect x="6" y="4" width="4" height="16" />
+                            <rect x="14" y="4" width="4" height="16" />
+                          </svg>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
