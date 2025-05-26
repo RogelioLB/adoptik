@@ -1,0 +1,61 @@
+---
+import Layout from '../layouts/Layout.astro';
+import VideoPlayer from '../components/VideoPlayer';
+
+// Datos iniciales para los videos
+const initialVideos = [
+  {
+    id: '1',
+    src: '/videos/video1.mp4',
+    likes: 1234,
+    comments: 456,
+    shares: 789
+  },
+  {
+    id: '2',
+    src: '/videos/video2.mp4',
+    likes: 987,
+    comments: 321,
+    shares: 654
+  },
+  {
+    id: '3',
+    src: '/videos/video3.mp4',
+    likes: 567,
+    comments: 890,
+    shares: 123
+  }
+];
+---
+<Layout>
+  <div id="app" class="w-full h-screen bg-black">
+    <VideoPlayer 
+      client:load
+      initialVideos={initialVideos}
+      loadMoreVideos={async (page) => {
+        // Simular carga de más videos
+        console.log(`Cargando página ${page}...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // En una aplicación real, aquí harías una llamada a tu API
+        return Array(3).fill(0).map((_, i) => ({
+          id: `video-${page * 3 + i + 1}`,
+          src: `/videos/video${((page * 3 + i) % 3) + 1}.mp4`,
+          likes: Math.floor(Math.random() * 1000) + 100,
+          comments: Math.floor(Math.random() * 500) + 50,
+          shares: Math.floor(Math.random() * 200) + 20
+        }));
+      }}
+    />
+  </div>
+  
+  <script>
+    // Asegurarse de que el contenedor ocupe toda la pantalla
+    document.documentElement.style.height = '100%';
+    document.body.style.height = '100%';
+    const app = document.getElementById('app');
+    if (app) {
+      app.style.height = '100%';
+    }
+  </script>
+</Layout>

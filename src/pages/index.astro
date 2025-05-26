@@ -1,10 +1,117 @@
 ---
-import VideoTikTok from '../components/VideoTikTok.astro';
 import Layout from '../layouts/Layout.astro';
----
+import VideoPlayer from '../components/VideoPlayer';
 
+// Datos iniciales para los videos
+const initialVideos = [
+  {
+    id: '1',
+    src: '/videos/video.mp4',
+    likes: 1234,
+    comments: 456,
+    shares: 789,
+    animalInfo: {
+      name: 'Max',
+      age: '2 años',
+      breed: 'Golden Retriever',
+      location: 'Madrid, España',
+      description: 'Max es un perro muy cariñoso y juguetón. Le encanta correr en el parque y jugar con la pelota. Es muy bueno con los niños y se lleva bien con otros perros.'
+    }
+  },
+  {
+    id: '2',
+    src: '/videos/video.mp4',
+    likes: 987,
+    comments: 321,
+    shares: 654,
+    animalInfo: {
+      name: 'Luna',
+      age: '1.5 años',
+      breed: 'Gato Siamés',
+      location: 'Barcelona, España',
+      description: 'Luna es una gata tranquila y cariñosa. Le gusta dormir en lugares cómodos y recibir mimos. Es muy limpia y ya está esterilizada.'
+    }
+  },
+  {
+    id: '3',
+    src: '/videos/video.mp4',
+    likes: 567,
+    comments: 890,
+    shares: 123,
+    animalInfo: {
+      name: 'Rocky',
+      age: '3 años',
+      breed: 'Bulldog Francés',
+      location: 'Valencia, España',
+      description: 'Rocky es un perro tranquilo y amigable. Le encanta pasear y dormir la siesta. Es perfecto para vivir en un piso y se lleva bien con todo el mundo.'
+    }
+  }
+];
+---
 <Layout>
+<<<<<<< HEAD
 	<div class="w-full h-screen bg-black">
 		<VideoTikTok videoSrc="/videos/video.mp4" likes={1234} comments={456} shares={789} />
 	</div>
+=======
+  <div id="app" class="w-full h-screen bg-black">
+    <VideoPlayer 
+      client:load
+      initialVideos={initialVideos}
+      loadMoreVideos={async (page) => {
+        // Simular carga de más videos
+        console.log(`Cargando página ${page}...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Datos de ejemplo para los animales
+        const animalExamples = [
+          {
+            name: 'Toby',
+            age: '4 años',
+            breed: 'Labrador Retriever',
+            location: 'Sevilla, España',
+            description: 'Toby es un perro muy juguetón y cariñoso. Le encanta jugar a la pelota y dar largos paseos. Es muy sociable y se lleva bien con otros perros y niños.'
+          },
+          {
+            name: 'Mia',
+            age: '2 años',
+            breed: 'Gato Persa',
+            location: 'Málaga, España',
+            description: 'Mia es una gata tranquila y cariñosa. Le gusta dormir en lugares cómodos y recibir mimos. Es muy limpia y ya está esterilizada.'
+          },
+          {
+            name: 'Rex',
+            age: '5 años',
+            breed: 'Pastor Alemán',
+            location: 'Bilbao, España',
+            description: 'Rex es un perro leal y protector. Está bien entrenado y es muy obediente. Necesita una familia activa que le proporcione ejercicio diario.'
+          }
+        ];
+        
+        // En una aplicación real, aquí harías una llamada a tu API
+        return Array(3).fill(0).map((_, i) => {
+          const animalIndex = (page * 3 + i) % 3;
+          return {
+            id: `video-${page * 3 + i + 1}`,
+            src: `/videos/video${animalIndex + 1}.mp4`,
+            likes: Math.floor(Math.random() * 1000) + 100,
+            comments: Math.floor(Math.random() * 500) + 50,
+            shares: Math.floor(Math.random() * 200) + 20,
+            animalInfo: animalExamples[animalIndex]
+          };
+        });
+      }}
+    />
+  </div>
+  
+  <script>
+    // Asegurarse de que el contenedor ocupe toda la pantalla
+    document.documentElement.style.height = '100%';
+    document.body.style.height = '100%';
+    const app = document.getElementById('app');
+    if (app) {
+      app.style.height = '100%';
+    }
+  </script>
+>>>>>>> 2fc841e8328327d386254dc333e554db10c6fd67
 </Layout>

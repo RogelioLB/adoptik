@@ -1,13 +1,16 @@
 ---
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaDog, FaUserAlt, FaBell} from "react-icons/fa";
 import { CiSettings } from "react-icons/ci";
+import { IoDocumentText, IoHome } from "react-icons/io5";
+import { FaFolder } from "react-icons/fa6";
 
 import Layout from "../../layouts/Layout.astro";
 import CardEstadistica from "../../components/CardEstadistica.astro";
+import CardAdministrar from "../../components/CardAdministrar.astro";
 ---
 
 <Layout>
-  <header class="bg-slate-400">
+  <header class="bg-slate-200">
     <nav class="flex justify-between p-4">
       <button class="text-3xl"><FaArrowLeft /></button>
       <h1 class="font-bold text-xl">Adoptik</h1>
@@ -16,12 +19,13 @@ import CardEstadistica from "../../components/CardEstadistica.astro";
   </header>
   <main class="p-4 flex flex-col sm:flex-row gap-4">
     <div>
-      <div class="flex justify-between">
-        <h2 class="font-bold text-xl">Estadisticas</h2>
-        <button class="flex items-center gap-4 text-gray-600 text-xl"
-          >Ver todo<FaArrowRight /></button
-        >
-      </div>
+  <div class="flex justify-between">
+    <h2 class="font-bold text-xl">Estadísticas</h2>
+    <button class="flex items-center gap-2 text-slate-300 text-xl">
+      Ver todo <FaArrowRight />
+    </button>
+  </div>
+</div>
 
       <section class="grid grid-cols-3 sm:flex sm:flex-col gap-2">
         <CardEstadistica
@@ -36,6 +40,64 @@ import CardEstadistica from "../../components/CardEstadistica.astro";
         />
         <CardEstadistica stat={5} text="Adopciones rechazadas" percentage={5} />
       </section>
+
+      <div>
+  <div class="flex justify-between">
+    <h2 class="font-bold text-xl">Administrar</h2>
+    <button class="flex items-center gap-2 text-slate-300 text-xl">
+      Ver todo <FaArrowRight />
+    </button>
+  </div>
+</div>
+
+<section class="grid grid-cols-3 gap-4 px-4">
+  <div class="flex flex-col items-center">
+    <CardAdministrar>
+      <FaDog class="text-5xl" />
+    </CardAdministrar>
+    <h1 class="mt-2 text-center font-semibold">Gestión de animales</h1>
+  </div>
+
+  <div class="flex flex-col items-center">
+    <CardAdministrar>
+      <FaUserAlt class="text-5xl" />
+    </CardAdministrar>
+    <h1 class="mt-2 text-center font-semibold">Gestión de usuarios
+      /adoptantes</h1>
+  </div>
+
+  <div class="flex flex-col items-center">
+    <CardAdministrar>
+      <IoDocumentText class="text-5xl" />
+    </CardAdministrar>
+    <h1 class="mt-2 text-center font-semibold">Gestión de solicitudes de adopción</h1>
+  </div>
+
+  
+  <div class="flex flex-col items-center">
+    <CardAdministrar>
+      <IoHome class="text-5xl" />
+    </CardAdministrar>
+    <h1 class="mt-2 text-center font-semibold">Gestión de refugios</h1>
+  </div>
+
+  <div class="flex flex-col items-center">
+    <CardAdministrar>
+      <FaBell class="text-5xl" />
+    </CardAdministrar>
+    <h1 class="mt-2 text-center font-semibold">Sistema de notificaciones y alertas</h1>
+  </div>
+
+  <div class="flex flex-col items-center">
+    <CardAdministrar>
+      <FaFolder class="text-5xl" />
+    </CardAdministrar>
+    <h1 class="mt-2 text-center font-semibold">Documentación y archivos</h1>
+  </div>
+</section>
+
+  
+
     </div>
   </main>
   <style>
