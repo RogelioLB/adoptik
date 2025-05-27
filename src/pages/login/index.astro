@@ -1,0 +1,61 @@
+---
+import { TbLockPassword } from "react-icons/tb";
+import { CgProfile } from "react-icons/cg";
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+    <div class="h-screen flex flex-col bg-white">
+    <header class="bg-slate-200">
+        <nav class="text-center">
+          <h1 class="font-bold text-xl text text-black">Adoptik</h1>
+        </nav>
+      </header>
+    <div class="p-16 flex-1">
+      <main
+        class="flex flex-col items-center justify-center h-full bg-gray-100 max-w-xl mx-auto text-black shadow-sm shadow-black/30 rounded-xl"
+      >
+        <div>
+          <h1 class="text-center w-full mb-3">
+            Inicio De Sesion<h1></h1>
+            <h2>
+              Usuario<h2></h2>
+              <div class="flex items-center shadow-xs shadow-black/30">
+                <div class="bg-slate-400 p-4 aspect-square h-full text-2xl">
+                  <CgProfile />
+                </div>
+                <input 
+                  class="p-4 outline-0 bg-white"
+                  type="text"
+                  placeholder="Ingresa el usuario"
+                />
+              </div>
+              <h2>Contraseña</h2>
+              <div class="flex items-center shadow-xs shadow-black/30">
+                <div class="bg-slate-400 p-4 aspect-square h-full text-2xl">
+                  <TbLockPassword />
+                </div>
+                <input
+                  class="p-4 outline-0 bg-white"
+                  type="password"
+                  placeholder="Ingresa la contraseña"
+                />
+              </div>
+
+              <button
+                class="p-4 border border-black text-center w-full mt-4 hover:bg-black hover:text-white transition-colors hover:cursor-pointer bg-white"
+                >Iniciar Sesion</button
+              >
+
+              <div></div>
+              <div>
+                <a href="">Crear cuenta</a>
+              </div>
+              <main></main>
+            </h2>
+          </h1>
+        </div>
+      </main>
+    </div>
+    </div>
+</Layout>
