@@ -2,60 +2,63 @@
 import { TbLockPassword } from "react-icons/tb";
 import { CgProfile } from "react-icons/cg";
 import Layout from "../../layouts/Layout.astro";
+import { MdPets } from "react-icons/md";
 ---
 
+<div class="flex items-center gap-2 bg-white">
+    <div class="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
+        <i class="text-2xl" ><MdPets /></i>
+    </div>
+    <h1 class="font-bold text-2xl bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">Adoptik</h1>
+    </div>
+</div>
+<div class="absolute bottom-28 left-1/2 -translate-x-1/2 z-10 pointer-events-auto"></div>
+<div class="absolute right-3 bottom-[20%] flex flex-col gap-5"></div>
+</div>
+<div class="hidden md:flex fixed top-1/2 left-4 right-4 justify-between z-20 pointer-events-none"></div>
 <Layout>
     <div class="h-screen flex flex-col bg-white">
-    <header class="bg-slate-200">
-        <nav class="text-center">
-          <h1 class="font-bold text-xl text text-black">Adoptik</h1>
-        </nav>
-      </header>
     <div class="p-16 flex-1">
-      <main
-        class="flex flex-col items-center justify-center h-full bg-gray-100 max-w-xl mx-auto text-black shadow-sm shadow-black/30 rounded-xl"
-      >
+    <main
+        class="flex flex-col items-center justify-center h-full bg-gray-100 max-w-xl mx-auto text-black shadow-sm shadow-black/30 rounded-xl">
         <div>
-          <h1 class="text-center w-full mb-3">
-            Inicio De Sesion<h1></h1>
-            <h2>
-              Usuario<h2></h2>
-              <div class="flex items-center shadow-xs shadow-black/30">
-                <div class="bg-slate-400 p-4 aspect-square h-full text-2xl">
-                  <CgProfile />
+        <h1 class="text-center w-full mb-3 font-bold text-3xl p-4">
+            Inicio De Sesion
+            <h2>Usuario</h2>
+            <div class="flex items-center shadow-xs shadow-black/30 rounded-xl ">
+                <div class="bg-slate-400 p-4 aspect-square h-full text-2xl rounded-tl-xl rounded-bl-xl">
+                <CgProfile />
                 </div>
                 <input 
-                  class="p-4 outline-0 bg-white"
-                  type="text"
-                  placeholder="Ingresa el usuario"
+                class="p-4 outline-0 bg-white rounded-br-xl rounded-tr-xl"
+                type="text"
+                placeholder="Ingresa el usuario"
                 />
-              </div>
-              <h2>Contraseña</h2>
-              <div class="flex items-center shadow-xs shadow-black/30">
-                <div class="bg-slate-400 p-4 aspect-square h-full text-2xl">
-                  <TbLockPassword />
+            </div>
+            <h2>Contraseña</h2>
+            <div class="flex items-center shadow-xs shadow-black/30 rounded-xl">
+                <div class="bg-slate-400 p-4 aspect-square h-full text-2xl rounded-tl-xl rounded-bl-xl">
+                <TbLockPassword />
                 </div>
                 <input
-                  class="p-4 outline-0 bg-white"
-                  type="password"
-                  placeholder="Ingresa la contraseña"
+                class="p-4 outline-0 bg-white rounded-br-xl rounded-tr-xl"
+                type="password"
+                placeholder="Ingresa la contraseña "
                 />
-              </div>
+            </div>
 
-              <button
-                class="p-4 border border-black text-center w-full mt-4 hover:bg-black hover:text-white transition-colors hover:cursor-pointer bg-white"
-                >Iniciar Sesion</button
-              >
+            <button class="p-4 border border-black text-center w-full mt-4 hover:bg-black hover:text-white transition-colors hover:cursor-pointer bg-white rounded-sm"
+            >Iniciar Sesion</button>
 
-              <div></div>
-              <div>
+            <div></div>
+            <div class="text-center p-4 text-blue-600">
                 <a href="">Crear cuenta</a>
-              </div>
-              <main></main>
+            </div>
+            <main></main>
             </h2>
-          </h1>
+        </h1>
         </div>
-      </main>
+    </main>
     </div>
     </div>
 </Layout>
