@@ -1,0 +1,43 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { CiSettings } from "react-icons/ci";
+---
+
+<Layout>
+  <div class="max-w-md mx-auto">
+    <header class="p-5 bg-white shadow-md rounded-b-lg">
+      <nav class="flex items-center justify-between">
+        <button class="text-3xl text-black">
+          <CiSettings />
+        </button>
+        <h1 class="text-xl font-bold text-black ">Adoptante</h1>
+        <div class="w-8 h-8"></div>
+      </nav>
+    </header>
+
+    <section class="text-center mt-8">
+      <div class="flex justify-center">
+        <img 
+          class="w-32 h-32 rounded-full object-cover shadow-md border-2 border-gray-300" 
+          src="/imagenes/perfil.jpg" 
+          alt="Foto de perfil"
+        />
+      </div>
+      <h2 class="text-xl font-semibold mt-4">Lili</h2>
+      <button class="mt-4 bg-gray-200 hover:bg-gray-300 text-sm font-medium py-2 px-4 rounded transition">
+        Editar perfil
+      </button>
+      <p class="mt-6 text-justify text-gray-700 px-4">
+        Soy una persona responsable, comprometida y con un profundo respeto por la vida animal. Cuento con un entorno adecuado, estable y seguro para brindar cuidado, atención y afecto a una mascota. Valoro el bienestar físico y emocional del animal, así como el compromiso a largo plazo que implica su adopción. Esta decisión nace del deseo de ofrecer un hogar lleno de cariño, respeto y dedicación.
+      </p>
+    </section>
+
+    <style>
+      body {
+        background-color: white;
+        color: black;
+        font-family: 'Arial', sans-serif;
+      }
+    </style>
+  </div>
+</Layout>
