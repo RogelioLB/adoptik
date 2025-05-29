@@ -1,41 +1,53 @@
-import { useState } from 'react';
-import { MdPets } from "react-icons/md";
+import { useState } from "react";
 import { CgProfile } from "react-icons/cg";
 import { TbLockPassword } from "react-icons/tb";
 import { MdEmail } from "react-icons/md";
 
-export default function Login() {
+export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!email || !password || !username) {
+      setError("Por favor completa todos los campos");
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError("Por favor ingresa un correo electrónico válido");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/signin", {
+      const response = await fetch("/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, username }),
       });
 
       if (response.redirected) {
-        window.location.href = "/";
+        window.location.href = "/login";
       } else {
-        const errorText = await response.text();
-        setError(
-          errorText === "Invalid login credentials"
-            ? "Correo o contraseña incorrectos"
-            : "Error al iniciar sesión"
-        );
+        const result = await response.text();
+        setError(result || "Error al registrarse. Por favor intenta de nuevo.");
       }
     } catch (err) {
-      console.error("Login error:", err);
+      console.error("Registration error:", err);
       setError("Error de conexión. Por favor intenta de nuevo.");
     } finally {
       setIsLoading(false);
@@ -50,7 +62,7 @@ export default function Login() {
             <MdEmail className="text-2xl text-white" />
           </div>
           <h1 className="font-bold text-2xl bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-            Adoptik
+            Registrarse
           </h1>
         </div>
       </div>
@@ -60,10 +72,10 @@ export default function Login() {
           <div className="p-8">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                Iniciar Sesión
+                Crear Cuenta
               </h2>
               <p className="text-gray-600">
-                Ingresa tus credenciales para continuar
+                Crea una cuenta para empezar a usar Adoptik
               </p>
             </div>
 
@@ -93,6 +105,30 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Nombre de usuario
+                </label>
+                <div className="relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <CgProfile className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Tu nombre de usuario"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label
                   htmlFor="email"
                   className="block text-sm font-medium text-gray-700"
                 >
@@ -107,11 +143,11 @@ export default function Login() {
                     name="email"
                     type="email"
                     autoComplete="email"
-                    required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     placeholder="tucorreo@ejemplo.com"
+                    required
                   />
                 </div>
               </div>
@@ -124,12 +160,6 @@ export default function Login() {
                   >
                     Contraseña
                   </label>
-                  <a
-                    href="#"
-                    className="text-sm text-purple-600 hover:text-purple-500"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </a>
                 </div>
                 <div className="relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -139,14 +169,17 @@ export default function Login() {
                     id="password"
                     name="password"
                     type="password"
-                    autoComplete="current-password"
-                    required
+                    autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="block text-black w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     placeholder="••••••••"
+                    required
                   />
                 </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  La contraseña debe tener al menos 6 caracteres
+                </p>
               </div>
 
               <div>
@@ -177,10 +210,10 @@ export default function Login() {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         ></path>
                       </svg>
-                      Iniciando sesión...
+                      Creando cuenta...
                     </>
                   ) : (
-                    'Iniciar Sesión'
+                    "Registrarse"
                   )}
                 </button>
               </div>
@@ -193,17 +226,17 @@ export default function Login() {
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-2 bg-white text-gray-500">
-                    ¿No tienes una cuenta?
+                    ¿Ya tienes una cuenta?
                   </span>
                 </div>
               </div>
 
               <div className="mt-6">
                 <a
-                  href="/register"
+                  href="/login"
                   className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200"
                 >
-                  Crear Cuenta
+                  Iniciar Sesión
                 </a>
               </div>
             </div>
