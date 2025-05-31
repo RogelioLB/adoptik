@@ -1,6 +1,19 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { CiSettings } from "react-icons/ci";
+import { supabase } from "../../lib/supabase";
+
+const { data: session } = await supabase.auth.getSession();
+
+if (!session) {
+  return redirect("/login");
+}
+
+console.log(session.session?.user.id)
+
+const { data: profile, error } = await supabase.from("profiles").select("*").eq("user_id", session.session?.user.id).single()
+console.log(error)
+console.log(profile)
 ---
 
 <Layout>
@@ -10,16 +23,16 @@ import { CiSettings } from "react-icons/ci";
       <div class="flex justify-center flex-col items-center gap-2 py-4 ">
         <img 
           class="w-32 h-32 rounded-full object-cover shadow-md border-2 border-gray-300" 
-          src="/imagenes/perfil.jpg" 
+          src={profile?.avatar}
           alt="Foto de perfil"
         />
-              <h2 class="text-xl font-semibold mt-4 text-black">Lili</h2>
+              <h2 class="text-xl font-semibold mt-4 text-black">{profile?.name}</h2>
       </div>
       <button class="w-28 mx-auto flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed">
         Editar perfil
       </button>
       <p class="mt-6 text-justify text-gray-700 px-4 text-sm">
-        Soy una persona responsable, comprometida y con un profundo respeto por la vida animal. Cuento con un entorno adecuado, estable y seguro para brindar cuidado, atención y afecto a una mascota. Valoro el bienestar físico y emocional del animal, así como el compromiso a largo plazo que implica su adopción. Esta decisión nace del deseo de ofrecer un hogar lleno de cariño, respeto y dedicación.
+        {profile?.description}
       </p>
     </section>
   </div>
