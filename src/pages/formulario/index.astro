@@ -1,0 +1,88 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { MdEmail } from "react-icons/md";
+import CardFormulario from "../../components/CardFormulario.astro";
+---
+
+<Layout>
+  <main class="text-black bg-gradient-to-b from-pink-50 to-purple-50">
+
+<div class="p-4">
+  <div class="flex items-center gap-2">
+    <div class="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
+      <MdEmail className="text-2xl text-white" />
+    </div>
+    <h1 class="font-bold text-2xl bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+      Adoptik
+    </h1>
+  </div>
+</div>
+
+
+    <h2 class="font-bold text-2xl text-center">Formulario de Adopción</h2>
+
+    <section class="space-y-4">
+      <h3 class="font-semibold text-xl">Datos del solicitante</h3>
+
+      <div class="space-y-4">
+        <div class="space-y-2">
+          <label class="block font-medium">Nombre completo</label>
+          <input type="text" placeholder="Nombre y apellido" required class="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block font-medium">Edad</label>
+          <input type="number" placeholder="Edad" required class="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block font-medium">CURP</label>
+          <input type="text" placeholder="CURP" required class="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block font-medium">Dirección</label>
+          <input type="text" placeholder="Dirección" required class="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block font-medium">Teléfono</label>
+          <input type="tel" placeholder="Número de teléfono" required class="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+        </div>
+
+        <div class="space-y-2">
+          <label class="block font-medium">Correo electrónico</label>
+          <input type="email" placeholder="Correo" required class="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+        </div>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      <h3 class="font-semibold text-xl">Situación familiar y del hogar</h3>
+
+      <div class="space-y-4">
+        <div class="space-y-2">
+          <label class="block font-medium">¿Vive en casa propia o alquilada?</label>
+          <div class="flex gap-4">
+            <label><input type="radio" name="vivienda" value="propia" /> Casa propia</label>
+            <label><input type="radio" name="vivienda" value="alquilada" /> Alquilada</label>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block font-medium">Tipo de vivienda</label>
+          <div class="flex gap-4">
+            <label><input type="radio" name="tipov" value="casa" /> Casa</label>
+            <label><input type="radio" name="tipov" value="departamento" /> Departamento</label>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block font-medium">¿Cuántas personas viven en el hogar?</label>
+          <input type="number" placeholder="Número de personas" class="w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
+        </div>
+
+
+
+
+
