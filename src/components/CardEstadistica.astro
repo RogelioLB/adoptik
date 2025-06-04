@@ -1,14 +1,12 @@
 ---
-interface Props{
-    stat:number,
-    text: string,
-    percentage: number
-}
-const {stat,text,percentage} = Astro.props;
+
+const { stat, text, percentage } = Astro.props;
 ---
 
-<div class="bg-gray-200 rounded-sm p-2">
-  <h2 class="font-bold">{stat}</h2>
-  <p>{text}</p>
-  <p>{percentage}% <span class="text-gray-500">7d</span></p>
+<div class="bg-white/50 backdrop-blur-sm rounded-sm p-4">
+  <h2 class="font-bold text-purple-400 text-5xl">{stat}</h2>
+  <p class="text-black">{text}</p>
+  <p class="text-purple-400">{percentage}% <span class="text-gray-500">7d</span></p>
 </div>
+
+

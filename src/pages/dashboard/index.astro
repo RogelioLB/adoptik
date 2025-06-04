@@ -1,8 +1,7 @@
 ---
-import { FaArrowLeft, FaArrowRight, FaDog, FaUserAlt, FaBell} from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaDog, FaUserAlt,} from "react-icons/fa";
+import { IoDocumentText } from "react-icons/io5";
 import { CiSettings } from "react-icons/ci";
-import { IoDocumentText, IoHome } from "react-icons/io5";
-import { FaFolder } from "react-icons/fa6";
 
 import Layout from "../../layouts/Layout.astro";
 import CardEstadistica from "../../components/CardEstadistica.astro";
@@ -10,100 +9,85 @@ import CardAdministrar from "../../components/CardAdministrar.astro";
 ---
 
 <Layout>
-  <header class="bg-slate-200">
-    <nav class="flex justify-between p-4">
-      <button class="text-3xl"><FaArrowLeft /></button>
-      <h1 class="font-bold text-xl">Adoptik</h1>
-      <button class="text-3xl"><CiSettings /></button>
+  <header class="bg-gradient-to-r from-pink-100 to-purple-100 shadow-sm">
+    <nav class="flex items-center justify-between p-4">
+      <!-- Izquierda -->
+      <div class="w-1/3">
+        <button class="text-3xl text-purple-600 hover:text-purple-800 transition"><FaArrowLeft /></button>
+      </div>
+
+      <!-- Centro -->
+      <div class="w-1/3 flex justify-center">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center shadow">
+            <FaDog className="text-2xl text-white" />
+          </div>
+          <h1 class="font-bold text-2xl bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+            Adoptik
+          </h1>
+        </div>
+      </div>
+
+      <!-- Derecha -->
+      <div class="w-1/3 flex justify-end">
+        <button class="text-3xl text-purple-600 hover:text-purple-800 transition"><CiSettings /></button>
+      </div>
     </nav>
   </header>
-  <main class="p-4 flex flex-col sm:flex-row gap-4">
-    <div>
-  <div class="flex justify-between">
-    <h2 class="font-bold text-xl">Estadísticas</h2>
-    <button class="flex items-center gap-2 text-slate-300 text-xl">
-      Ver todo <FaArrowRight />
-    </button>
-  </div>
-</div>
 
-      <section class="grid grid-cols-3 sm:flex sm:flex-col gap-2">
-        <CardEstadistica
-          stat={50}
-          text="Numero de adopciones por mes"
-          percentage={50}
-        />
-        <CardEstadistica
-          stat={25}
-          text="Adopciones aprobadas"
-          percentage={25}
-        />
+  <main class="p-6 bg-gradient-to-b from-pink-50 to-purple-50 min-h-screen">
+    <!-- Estadísticas -->
+    <section class="mb-8">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="font-bold text-xl text-gray-800">Estadísticas</h2>
+        <button class="flex items-center gap-2 text-purple-600 hover:text-purple-800 text-lg transition">
+          Ver todo <FaArrowRight />
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <CardEstadistica stat={50} text="Número de adopciones por mes" percentage={50} />
+        <CardEstadistica stat={25} text="Adopciones aprobadas" percentage={25} />
         <CardEstadistica stat={5} text="Adopciones rechazadas" percentage={5} />
-      </section>
+      </div>
+    </section>
 
-      <div>
-  <div class="flex justify-between">
-    <h2 class="font-bold text-xl">Administrar</h2>
-    <button class="flex items-center gap-2 text-slate-300 text-xl">
-      Ver todo <FaArrowRight />
-    </button>
-  </div>
-</div>
+    <!-- Administrar -->
+    <section>
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="font-bold text-xl text-gray-800">Administrar</h2>
+        <button class="flex items-center gap-2 text-purple-600 hover:text-purple-800 text-lg transition">
+          Ver todo <FaArrowRight />
+        </button>
+      </div>
 
-<section class="grid grid-cols-3 gap-4 px-4">
-  <div class="flex flex-col items-center">
-    <CardAdministrar>
-      <i class="text-5xl"><FaDog/></i>
-    </CardAdministrar>
-    <h1 class="mt-2 text-center font-semibold">Gestión de animales</h1>
-  </div>
+      <div class=" grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <!-- Gestión de animales -->
+        <div class="flex flex-col items-center">
+          <CardAdministrar>
+            <i class="text-5xl text-purple-600"><FaDog /></i>
+          </CardAdministrar>
+          <h1 class="mt-2 text-center font-semibold text-gray-700">Gestión de animales</h1>
+        </div>
 
-  <div class="flex flex-col items-center">
-    <CardAdministrar>
-      <i class="text-5xl" ><FaUserAlt/></i>
-    </CardAdministrar>
-    <h1 class="mt-2 text-center font-semibold">Gestión de usuarios
-      /adoptantes</h1>
-  </div>
+        <!-- Gestión de usuarios -->
+        <div class="flex flex-col items-center">
+          <CardAdministrar>
+            <i class="text-5xl text-purple-600"><FaUserAlt /></i>
+          </CardAdministrar>
+          <h1 class="mt-2 text-center font-semibold text-gray-700">Gestión de usuarios / adoptantes</h1>
+        </div>
 
-  <div class="flex flex-col items-center">
-    <CardAdministrar>
-      <i  class="text-5xl" ><IoDocumentText/></i>
-    </CardAdministrar>
-    <h1 class="mt-2 text-center font-semibold">Gestión de solicitudes de adopción</h1>
-  </div>
-
-  
-  <div class="flex flex-col items-center">
-    <CardAdministrar>
-      <i  class="text-5xl"><IoHome/></i>
-    </CardAdministrar>
-    <h1 class="mt-2 text-center font-semibold">Gestión de refugios</h1>
-  </div>
-
-  <div class="flex flex-col items-center">
-    <CardAdministrar>
-      <i class="text-5xl" ><FaBell/></i>
-    </CardAdministrar>
-    <h1 class="mt-2 text-center font-semibold">Sistema de notificaciones y alertas</h1>
-  </div>
-
-  <div class="flex flex-col items-center">
-    <CardAdministrar>
-      <i  class="text-5xl" ><FaFolder/></i>
-    </CardAdministrar>
-    <h1 class="mt-2 text-center font-semibold">Documentación y archivos</h1>
-  </div>
-</section>
-
-  
-
-    </div>
+        <!-- Gestión de solicitudes -->
+        <div class="flex flex-col items-center">
+          <CardAdministrar>
+            <i class="text-5xl text-purple-600"><IoDocumentText /></i>
+          </CardAdministrar>
+          <h1 class="mt-2 text-center font-semibold text-gray-700">Gestión de solicitudes de adopción</h1>
+        </div>
+      </div>
+    </section>
   </main>
-  <style>
-    body {
-      background-color: white;
-      color: black;
-    }
-  </style>
 </Layout>
+
+
