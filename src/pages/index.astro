@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import VideoPlayer from '../components/VideoPlayer';
+import LayoutWithBottomNav from '../layouts/LayoutWithBottomNav.astro';
 
 // Datos iniciales para los videos
 const initialVideos = [
@@ -48,8 +49,7 @@ const initialVideos = [
   }
 ];
 ---
-<Layout>
-  <div id="app" class="w-full h-screen bg-black">
+<LayoutWithBottomNav>
     <VideoPlayer 
       client:load
       initialVideos={initialVideos}
@@ -97,15 +97,4 @@ const initialVideos = [
         });
       }}
     />
-  </div>
-  
-  <script>
-    // Asegurarse de que el contenedor ocupe toda la pantalla
-    document.documentElement.style.height = '100%';
-    document.body.style.height = '100%';
-    const app = document.getElementById('app');
-    if (app) {
-      app.style.height = '100%';
-    }
-  </script>
-</Layout>
+</LayoutWithBottomNav>

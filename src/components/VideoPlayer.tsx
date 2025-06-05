@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type TouchEvent,
+} from "react";
 import AnimalModal from "./AnimalModal";
-
-// Eliminamos la importación de VideoTikTok ya que ahora manejamos los videos directamente
-// import VideoTikTok from "./VideoTikTok";
 
 export interface AnimalInfo {
   name: string;
@@ -36,366 +39,155 @@ export default function VideoPlayer({
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [isVideoPaused, setIsVideoPaused] = useState<boolean>(false);
-  const [showPlayButton, setShowPlayButton] = useState<boolean>(true);
+  const [showPlayButton, setShowPlayButton] = useState<boolean>(false);
+  const [isScrolling, setIsScrolling] = useState<boolean>(false);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const hidePlayButtonTimeout = useRef<NodeJS.Timeout | null>(null);
-  const modalTimerRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const scrollAnimationFrameRef = useRef<number | null>(null);
-  const isScrollingRef = useRef(false);
-  const touchStartY = useRef(0);
-  const lastScrollTime = useRef(0);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchCurrentY, setTouchCurrentY] = useState<number | null>(null);
 
-  // Efecto para limpiar al desmontar
-  useEffect(() => {
-    return () => {
-      if (modalTimerRef.current) {
-        clearTimeout(modalTimerRef.current);
-      }
-      if (scrollAnimationFrameRef.current) {
-        cancelAnimationFrame(scrollAnimationFrameRef.current);
-      }
-      if (hidePlayButtonTimeout.current) {
-        clearTimeout(hidePlayButtonTimeout.current);
-      }
-    };
-  }, []);
-
-  // Efecto para actualizar el estado de pausa cuando cambia el video
-  useEffect(() => {
-    const video = videoRefs.current[currentIndex];
-    if (video) {
-      setIsVideoPaused(video.paused);
+  const goToNextVideo = () => {
+    if (currentIndex < videos.length - 1) {
+      setCurrentIndex(currentIndex + 1);
     }
-  }, [currentIndex]);
+  };
 
-  // Evitar que el scroll del cuerpo cuando el modal está abierto
-  useEffect(() => {
-    if (showModal) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
+  const goToPreviousVideo = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    if (touchStartY === null) return; // Only track if touch has started
+
+    // Prevent default scroll behavior while swiping to change video
+    // This helps avoid the browser's native scroll interfering with the swipe gesture
+    // Only prevent default if the swipe is predominantly vertical
+    const currentY = e.touches[0].clientY;
+    setTouchCurrentY(currentY);
+    if (Math.abs(touchStartY - currentY) > 10 && e.cancelable) { // Add a small threshold to confirm vertical swipe intention
+        e.preventDefault();
+    }
+  };
+
+  const handleClick = () => {
+    const currentVideoElement = videoRefs.current[currentIndex];
+    if (!currentVideoElement) return;
+
+    if (currentVideoElement.paused) { // Video is paused or ended, so play it
+      currentVideoElement.play().catch(error => console.error("Error playing video:", error));
+      setIsVideoPaused(false);
+      setShowPlayButton(false); // Hide play button when video plays
+    } else { // Video is playing, so pause it
+      currentVideoElement.pause();
+      setIsVideoPaused(true);
+      setShowPlayButton(true); // Show play button when video pauses
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartY === null || touchCurrentY === null) return;
+
+    const deltaY = touchStartY - touchCurrentY; // Positive for swipe up (next video), negative for swipe down (prev video)
+    const threshold = 50; // Minimum swipe distance in pixels
+
+    if (Math.abs(deltaY) > threshold) {
+      if (deltaY > 0) { // Swiped up
+        goToNextVideo();
+      } else { // Swiped down
+        goToPreviousVideo();
+      }
     }
 
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [showModal]);
+    // Reset touch state for the next interaction
+    setTouchStartY(null);
+    setTouchCurrentY(null);
+  };
 
-  const handleOpenModal = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    // Pausar temporalmente el scroll mientras el modal está abierto
-    if (containerRef.current) {
-      containerRef.current.style.overflow = "hidden";
-    }
-
-    setShowModal(true);
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    setTouchStartY(e.touches[0].clientY);
+    setTouchCurrentY(e.touches[0].clientY); // Initialize currentY as well
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
-
-    // Restaurar el scroll después de que la animación del modal termine
-    modalTimerRef.current = setTimeout(() => {
-      if (containerRef.current) {
-        containerRef.current.style.overflow = "auto";
+    const currentVideoElement = videoRefs.current[currentIndex];
+    if (currentVideoElement) {
+      // If the video was paused (e.g., by opening the modal), play it.
+      if (currentVideoElement.paused) { 
+         currentVideoElement.play().catch(error => console.error("Error playing video on modal close:", error));
       }
-    }, 300); // Tiempo de la animación del modal
+      // Reflect that video is intended to be playing.
+      setIsVideoPaused(false);
+      setShowPlayButton(false);
+    }
   };
-  const loadingRef = useRef(false);
 
-  // Cargar más videos cuando se llega al final
-  useEffect(() => {
-    if (!loadMoreVideos || loadingRef.current) return;
-
-    const handleScroll = async () => {
-      if (!containerRef.current || loadingRef.current) return;
-
-      const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-      const isAtBottom = scrollHeight - (scrollTop + clientHeight) < 100;
-
-      if (isAtBottom) {
-        try {
-          loadingRef.current = true;
-          setLoading(true);
-          const newVideos = await loadMoreVideos(page + 1);
-
-          if (newVideos.length > 0) {
-            setVideos((prev) => [...prev, ...newVideos]);
-            setPage((prev) => prev + 1);
-          }
-        } catch (error) {
-          console.error("Error loading more videos:", error);
-        } finally {
-          loadingRef.current = false;
-          setLoading(false);
-        }
-      }
-    };
-
-    const container = containerRef.current;
-    container?.addEventListener("scroll", handleScroll);
-
-    return () => {
-      container?.removeEventListener("scroll", handleScroll);
-    };
-  }, [page, loadMoreVideos]);
-
-  // Manejar navegación entre videos
-  const goToNextVideo = useCallback(() => {
-    if (currentIndex < videos.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else if (loadMoreVideos && !loadingRef.current) {
-      // Cargar más videos si estamos al final
-      loadMoreVideos(page + 1).then((newVideos) => {
-        if (newVideos.length > 0) {
-          setVideos((prev) => [...prev, ...newVideos]);
-          setPage((prev) => prev + 1);
-          setCurrentIndex((prev) => prev + 1);
-        }
-      });
+  const handleOpenModal = () => {
+    const currentVideoElement = videoRefs.current[currentIndex];
+    if (currentVideoElement && !currentVideoElement.paused) {
+      currentVideoElement.pause();
     }
-  }, [currentIndex, videos.length, loadMoreVideos, page]);
+    setShowModal(true);
+    setIsVideoPaused(true); // Video is now paused
+    setShowPlayButton(true); // Show play button because it's paused
+  };
 
-  const goToPrevVideo = useCallback(() => {
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-    }
-  }, [currentIndex]);
-
-  // Manejar navegación con teclado
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-        e.preventDefault();
-        goToPrevVideo();
-      } else if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-        e.preventDefault();
-        goToNextVideo();
-      }
-    };
+    if (!containerRef.current || videos.length === 0) return;
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [goToNextVideo, goToPrevVideo]);
-
-  // Manejar scroll del usuario
-  const handleScroll = useCallback(() => {
-    // Ignorar si estamos haciendo scroll programático
-    if (isScrollingRef.current || !containerRef.current) return;
-
-    const { scrollTop, scrollHeight } = containerRef.current;
-    const videoHeight = scrollHeight / videos.length;
-    const currentVideoIndex = Math.round(scrollTop / videoHeight);
-
-    // Solo actualizar si hay un cambio significativo
-    if (currentVideoIndex !== currentIndex) {
-      setCurrentIndex(currentVideoIndex);
-    }
-  }, [currentIndex, videos.length]);
-
-  // Efecto para manejar el scroll al cambiar de video
-  useEffect(() => {
-    if (!containerRef.current || isScrollingRef.current) return;
-
-    // Bloquear actualizaciones mientras hacemos scroll programático
-    isScrollingRef.current = true;
-
-    const videoHeight = containerRef.current.scrollHeight / videos.length;
-    const targetScroll = currentIndex * videoHeight;
-
-    // Usar scrollTo con behavior: 'smooth' para una transición suave
+    const videosHeight = containerRef.current.scrollHeight / videos.length;
     containerRef.current.scrollTo({
-      top: targetScroll,
+      top: currentIndex * videosHeight,
       behavior: "smooth",
     });
 
-    // Actualizar reproducción de videos
-    videoRefs.current.forEach((video, index) => {
-      if (!video) return;
-
-      if (index === currentIndex) {
-        video.play().catch((e) => console.log("Error al reproducir:", e));
-        setIsVideoPaused(false);
-      } else {
-        video.pause();
+    videoRefs.current.forEach((videoEl, index) => {
+      if (videoEl) {
+        if (index === currentIndex) {
+          // Play the current video if it's paused
+          if (videoEl.paused) {
+            videoEl.currentTime = 0; // Reset time
+            videoEl.play().catch(error => console.error(`Error playing video ${index}:`, error));
+          }
+          setIsVideoPaused(false); // Current video is intended to be playing
+          setShowPlayButton(false); // Hide play button
+        } else {
+          // Pause and reset other videos
+          if (!videoEl.paused) {
+            videoEl.pause();
+          }
+          videoEl.currentTime = 0;
+        }
       }
     });
+  }, [currentIndex, videos]); // Added videos to dependency array
 
-    // Desbloquear después de la animación
-    const timer = setTimeout(() => {
-      isScrollingRef.current = false;
-    }, 500);
 
-    return () => clearTimeout(timer);
-  }, [currentIndex, videos.length]);
-
-  // Manejar play/pausa del video
-  const togglePlayPause = useCallback(() => {
-    const video = videoRefs.current[currentIndex];
-    if (!video) return;
-
-    if (video.paused) {
-      video.play().catch((e) => console.log("Error al reproducir:", e));
-      setIsVideoPaused(false);
-    } else {
-      video.pause();
-      setIsVideoPaused(true);
-    }
-
-    // Mostrar el botón de play/pausa
-    setShowPlayButton(true);
-    // Ocultar después de 1 segundo
-    if (hidePlayButtonTimeout.current) {
-      clearTimeout(hidePlayButtonTimeout.current);
-    }
-    hidePlayButtonTimeout.current = setTimeout(() => {
-      setShowPlayButton(false);
-    }, 1000);
-  }, [currentIndex]);
-
-  // Manejar scroll táctil
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    const touchEndY = e.changedTouches[0].clientY;
-    const diff = touchStartY.current - touchEndY;
-
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) {
-        // Deslizamiento hacia arriba - siguiente video
-        goToNextVideo();
-      } else {
-        // Deslizamiento hacia abajo - video anterior
-        goToPrevVideo();
-      }
-    } else {
-      // Si el desplazamiento es pequeño, manejar como toque para play/pausa
-      togglePlayPause();
-    }
-  };
-
-  // Referencia para evitar múltiples toques rápidos
-  const isHandlingClick = useRef(false);
-
-  // Manejar clic en el video
-  const handleVideoClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-
-      if (isHandlingClick.current) return;
-      isHandlingClick.current = true;
-
-      const video = videoRefs.current[currentIndex];
-      if (!video) {
-        isHandlingClick.current = false;
-        return;
-      }
-
-      // Cambiar el estado inmediatamente para feedback visual
-      const wasPaused = video.paused;
-      setIsVideoPaused(!wasPaused);
-      setShowPlayButton(true);
-
-      // Limpiar timeout anterior si existe
-      if (hidePlayButtonTimeout.current) {
-        clearTimeout(hidePlayButtonTimeout.current);
-      }
-
-      // Ocultar botón después de 1 segundo
-      hidePlayButtonTimeout.current = setTimeout(() => {
-        setShowPlayButton(false);
-      }, 1000);
-
-      // Manejar la reproducción/pausa
-      try {
-        if (wasPaused) {
-          video.play().then(() => {
-            // Asegurarse de que el estado sea consistente después de la reproducción
-            if (!video.paused) {
-              setIsVideoPaused(false);
-            }
-          });
-        } else {
-          video.pause();
-          // No necesitamos then() aquí ya que pausar es síncrono
-        }
-      } catch (error) {
-        console.error("Error al controlar el video:", error);
-      } finally {
-        // Permitir el próximo clic después de un pequeño retraso
-        setTimeout(() => {
-          isHandlingClick.current = false;
-        }, 200);
-      }
-    },
-    [currentIndex]
-  );
-
-  // Manejar evento play del video
-  const handlePlay = useCallback(() => {
-    // Solo actualizar si el video realmente está reproduciéndose
-    const video = videoRefs.current[currentIndex];
-    if (video && !video.paused) {
-      setIsVideoPaused(false);
-    }
-  }, [currentIndex]);
-
-  // Manejar evento pause del video
-  const handlePause = useCallback(() => {
-    // Solo actualizar si el video realmente está pausado
-    const video = videoRefs.current[currentIndex];
-    if (video && video.paused) {
-      setIsVideoPaused(true);
-    }
-  }, [currentIndex]);
-
-  // Mostrar el botón al pasar el ratón por encima
-  const handleMouseEnter = useCallback(() => {
-    setShowPlayButton(true);
-  }, []);
-
-  // Ocultar el botón después de un tiempo
-  const handleMouseLeave = useCallback(() => {
-    if (hidePlayButtonTimeout.current) {
-      clearTimeout(hidePlayButtonTimeout.current);
-    }
-    hidePlayButtonTimeout.current = setTimeout(() => {
-      setShowPlayButton(false);
-    }, 1000);
-  }, []);
-
-  // Renderizar solo los videos cercanos al actual para mejor rendimiento
-  // Obtener el video actual
   const currentVideo = videos[currentIndex];
 
   return (
-    <div className="w-full min-h-screen bg-black relative">
+    <div className="w-full bg-black relative">
       {/* Contenedor de videos con scroll */}
       <div
-        ref={containerRef}
-        className="w-full h-dvh overflow-y-auto relative bg-black"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onScroll={handleScroll}
+        className="w-full h-[calc(100dvh-4rem)] overflow-y-auto relative bg-black"
         style={{
           WebkitOverflowScrolling: "touch",
           overscrollBehavior: "contain",
           msOverflowStyle: "none",
           scrollbarWidth: "none",
         }}
+        ref={containerRef}
+        onTouchMove={handleTouchMove}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {videos.map((video, index) => (
           <div
             key={video.id}
             id={`video-${index}`}
             className={`relative w-full h-full flex items-center justify-center`}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
           >
             <div
               className="w-full md:max-w-md mx-auto h-full flex md:items-center md:justify-center"
@@ -410,6 +202,7 @@ export default function VideoPlayer({
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
+                  handleClick();
                 }}
               >
                 <video
@@ -430,13 +223,6 @@ export default function VideoPlayer({
                   className="absolute inset-0 w-full h-full object-cover"
                   autoPlay={index === currentIndex}
                   loop
-                  onPlay={handlePlay}
-                  onPause={handlePause}
-                  onEnded={handlePause}
-                  onSeeking={handlePause}
-                  onSeeked={handlePlay}
-                  onWaiting={handlePause}
-                  onPlaying={handlePlay}
                 />
                 {/* Botón de play/pausa superpuesto */}
                 <div className="absolute inset-0 flex items-center justify-center cursor-pointer">
@@ -518,7 +304,7 @@ export default function VideoPlayer({
           </div>
 
           {/* Barra lateral de interacciones */}
-          <div className="absolute right-3 bottom-[20%] flex flex-col gap-5">
+          <div className="fixed right-3 bottom-[20%] flex flex-col gap-5">
             <div className="flex flex-col items-center gap-1">
               <button
                 onClick={() => console.log("Like al video:", currentVideo.id)}
@@ -602,7 +388,7 @@ export default function VideoPlayer({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            goToPrevVideo();
+            goToPreviousVideo();
           }}
           className="bg-white/20 hover:bg-white/30 text-white rounded-full w-12 h-12 flex items-center justify-center transition-all duration-200 backdrop-blur-sm pointer-events-auto"
           aria-label="Anterior video"

@@ -1,39 +1,40 @@
 ---
-import Layout from "../../layouts/Layout.astro";
+import LayoutWithBottomNav from "../../layouts/LayoutWithBottomNav.astro";
 import { CiSettings } from "react-icons/ci";
 import { supabase } from "../../lib/supabase";
 
-const { data: session } = await supabase.auth.getSession();
+const { data: {session} } = await supabase.auth.getSession();
 
-if (!session) {
-  return redirect("/login");
-}
 
-console.log(session.session?.user.id)
-
-const { data: profile, error } = await supabase.from("profiles").select("*").eq("user_id", session.session?.user.id).single()
-console.log(error)
-console.log(profile)
+const { data: profile, error } = await supabase.from("profiles").select("*").eq("user_id", session?.user.id).single()
 ---
 
-<Layout>
-  <div class="max-w-md mx-auto">
+<LayoutWithBottomNav title="Adoptik | Perfil">
+  {session ? (
+    <div class="max-w-md mx-auto">
 
-    <section class="text-center">
-      <div class="flex justify-center flex-col items-center gap-2 py-4 ">
-        <img 
-          class="w-32 h-32 rounded-full object-cover shadow-md border-2 border-gray-300" 
-          src={profile?.avatar}
-          alt="Foto de perfil"
-        />
-              <h2 class="text-xl font-semibold mt-4 text-black">{profile?.name}</h2>
-      </div>
-      <button class="w-28 mx-auto flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed">
-        Editar perfil
-      </button>
-      <p class="mt-6 text-justify text-gray-700 px-4 text-sm">
-        {profile?.description}
-      </p>
-    </section>
+<section class="text-center">
+  <div class="flex justify-center flex-col items-center gap-2 py-4 ">
+    <img 
+      class="w-32 h-32 rounded-full object-cover shadow-md border-2 border-gray-300" 
+      src={profile?.avatar}
+      alt="Foto de perfil"
+    />
+          <h2 class="text-xl font-semibold mt-4 text-black">{profile?.name}</h2>
   </div>
-</Layout>
+  <button class="w-28 mx-auto flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed">
+    Editar perfil
+  </button>
+  <p class="mt-6 text-justify text-gray-700 px-4 text-sm">
+    {profile?.description}
+  </p>
+</section>
+</div>
+  ) : (
+    <div class="flex flex-col items-center justify-center h-[calc(100dvh-4rem)] text-black">
+      <h1 class="font-bold text-4xl text-balance text-center">Aun no ha iniciado sesión</h1>
+      <a href="/login" class="text-blue-600 hover:text-blue-800 transition">Iniciar sesión</a>
+    </div>
+  )}
+  
+</LayoutWithBottomNav>

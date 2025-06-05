@@ -1,0 +1,15 @@
+---
+// src/layouts/LayoutWithBottomNav.astro
+import BaseLayout from './Layout.astro'; // Assuming your main layout is Layout.astro
+import BottomNavbar from '../components/BottomNavbar.astro';
+
+const { title, ...rest } = Astro.props;
+---
+<BaseLayout title={title} {...rest}>
+  <div class="flex flex-col min-h-dvh">
+    <main class="flex-grow">
+      <slot />
+    </main>
+    <BottomNavbar />
+  </div>
+</BaseLayout>
