@@ -1,0 +1,174 @@
+---
+import Layout from "../../../../layouts/Layout.astro";
+import { supabase } from "../../../../lib/supabase";
+import type { Database, Json } from "../../../../database.types"; // Adjusted path
+import { FaUserEdit, FaExclamationTriangle } from "react-icons/fa";
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
+type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
+type ProfileRole = Database['public']['Enums']['user_role'] extends Json ? Database['public']['Enums']['user_role'] : string;
+
+const { profileId } = Astro.params;
+
+// Admin check
+const { data: { session: adminSession } } = await supabase.auth.getSession();
+if (!adminSession) {
+  return Astro.redirect('/');
+}
+const { data: adminProfile } = await supabase.from("profiles").select("role").eq("user_id", adminSession.user.id).single();
+if (adminProfile?.role !== 'Admin') {
+  return Astro.redirect('/');
+}
+
+let userProfile: Profile | null = null;
+let fetchError: string | null = null;
+let formError: string | null = null;
+let formSuccess: string | null = null;
+
+const availableRoles: ProfileRole[] = ['Admin', 'User']; // Adjust if your roles are different
+
+// Fetch user profile
+if (profileId) {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', profileId)
+      .single();
+    if (error) throw error;
+    userProfile = data;
+    if (!userProfile) {
+        fetchError = "Usuario no encontrado.";
+    }
+  } catch (error: any) {
+    console.error('Error fetching profile:', error.message);
+    fetchError = `Error al cargar el perfil: ${error.message}`;
+  }
+} else {
+  fetchError = "ID de perfil no proporcionado.";
+}
+
+// Handle form submission for updating user
+if (Astro.request.method === "POST" && userProfile) {
+  try {
+    const formData = await Astro.request.formData();
+    const fullName = formData.get("full_name")?.toString();
+    const username = formData.get("username")?.toString();
+    const phoneNumber = formData.get("phone_number")?.toString() || null;
+    const role = formData.get("role")?.toString() as ProfileRole;
+
+    if (!fullName || !username || !role) {
+      throw new Error("Nombre completo, nombre de usuario y rol son obligatorios.");
+    }
+    if (!availableRoles.includes(role)) {
+        throw new Error("Rol seleccionado no válido.");
+    }
+
+    const updates: ProfileUpdate = {
+      full_name: fullName,
+      username: username,
+      phone_number: phoneNumber,
+      role: role,
+      updated_at: new Date().toISOString(), // Update the timestamp
+    };
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', profileId);
+
+    if (updateError) {
+      throw new Error(`Error al actualizar el perfil: ${updateError.message}`);
+    }
+
+    formSuccess = "Perfil de usuario actualizado exitosamente.";
+    // Fetch the updated profile to display fresh data
+    const { data: updatedData, error: refetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', profileId)
+        .single();
+    if (refetchError) console.error("Error refetching profile:", refetchError.message);
+    else userProfile = updatedData;
+
+  } catch (error: any) {
+    formError = error.message;
+  }
+}
+
+const pageTitle = userProfile ? `Editar Usuario: ${userProfile.full_name || 'Desconocido'}` : "Editar Usuario";
+---
+
+<Layout title={pageTitle}>
+  <div class="container mx-auto px-4 py-8 max-w-2xl text-black">
+    <a href="/dashboard/usuarios" class="text-pink-600 hover:text-pink-800 mb-6 inline-block">&larr; Volver a la lista de usuarios</a>
+    <h1 class="text-3xl font-bold text-gray-800 mb-8 flex items-center">
+      <FaUserEdit className="mr-3 text-pink-500" size={36} />
+      {userProfile ? `Editar: ${userProfile.full_name || userProfile.username || 'Usuario'}` : 'Editar Usuario'}
+    </h1>
+
+    {fetchError && (
+      <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+        <p class="font-bold flex items-center"><FaExclamationTriangle className="mr-2"/>Error de Carga</p>
+        <p>{fetchError}</p>
+      </div>
+    )}
+
+    {formError && (
+      <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+        <p class="font-bold flex items-center"><FaExclamationTriangle className="mr-2"/>Error al Actualizar</p>
+        <p>{formError}</p>
+      </div>
+    )}
+    {formSuccess && (
+      <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+        <p class="font-bold">Éxito</p>
+        <p>{formSuccess}</p>
+      </div>
+    )}
+
+    {userProfile && !fetchError && (
+      <form method="POST" class="bg-white shadow-xl rounded-lg p-8 space-y-6">
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico (No editable)</label>
+          <input type="email" name="email" id="email" value={userProfile.email || 'No disponible'} readonly class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 focus:outline-none sm:text-sm">
+          <p class="mt-1 text-xs text-gray-500">El correo electrónico no se puede cambiar desde aquí.</p>
+        </div>
+
+        <div>
+          <label for="full_name" class="block text-sm font-medium text-gray-700">Nombre Completo <span class="text-red-500">*</span></label>
+          <input type="text" name="full_name" id="full_name" value={userProfile.full_name || ''} required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+        </div>
+
+        <div>
+          <label for="username" class="block text-sm font-medium text-gray-700">Nombre de Usuario (username) <span class="text-red-500">*</span></label>
+          <input type="text" name="username" id="username" value={userProfile.username || ''} required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+        </div>
+
+        <div>
+          <label for="phone_number" class="block text-sm font-medium text-gray-700">Número de Teléfono</label>
+          <input type="tel" name="phone_number" id="phone_number" value={userProfile.phone_number || ''} class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+        </div>
+
+        <div>
+          <label for="role" class="block text-sm font-medium text-gray-700">Rol <span class="text-red-500">*</span></label>
+          <select name="role" id="role" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+            {availableRoles.map(r => <option value={r} selected={userProfile.role === r}>{r}</option>)}
+          </select>
+        </div>
+        
+        <div>
+          <p class="text-xs text-gray-500">ID de Perfil: {userProfile.id}</p>
+          <p class="text-xs text-gray-500">ID de Usuario (Auth): {userProfile.user_id}</p>
+          <p class="text-xs text-gray-500">Última actualización: {userProfile.updated_at ? new Date(userProfile.updated_at).toLocaleString() : 'N/A'}</p>
+        </div>
+
+        <div class="flex justify-end">
+          <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50">
+            Guardar Cambios
+          </button>
+        </div>
+      </form>
+    )}
+  </div>
+</Layout>

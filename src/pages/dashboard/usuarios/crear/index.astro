@@ -1,0 +1,163 @@
+---
+import Layout from "../../../../layouts/Layout.astro";
+import { supabase } from "../../../../lib/supabase";
+import type { Database, Json } from "../../../database.types"; // Adjusted path based on your open file
+import { FaUserPlus, FaExclamationTriangle } from "astro-icons/fa";
+
+type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
+// Assuming 'user_role' is the name of your enum in Supabase for user roles.
+// If it's different, please adjust Database['public']['Enums']['user_role'] accordingly.
+// If you don't have an enum and 'role' is just a text field, you can simplify this.
+type ProfileRole = Database['public']['Enums']['user_role'] extends Json ? Database['public']['Enums']['user_role'] : string;
+
+// Admin check
+const { data: { session: adminSession } } = await supabase.auth.getSession();
+if (!adminSession) {
+  return Astro.redirect('/');
+}
+const { data: adminProfile } = await supabase.from("profiles").select("role").eq("user_id", adminSession.user.id).single();
+if (adminProfile?.role !== 'Admin') {
+  return Astro.redirect('/');
+}
+
+let formError: string | null = null;
+let formSuccess: string | null = null;
+
+// Define available roles. If you have a user_role enum, these should match its values.
+const availableRoles: ProfileRole[] = ['Admin', 'User']; // Adjust if your roles are different or come from an enum
+
+if (Astro.request.method === "POST") {
+  try {
+    const formData = await Astro.request.formData();
+    const email = formData.get("email")?.toString();
+    const password = formData.get("password")?.toString();
+    const fullName = formData.get("full_name")?.toString();
+    const username = formData.get("username")?.toString();
+    const phoneNumber = formData.get("phone_number")?.toString() || null; // Optional
+    const role = formData.get("role")?.toString() as ProfileRole;
+
+    if (!email || !password || !fullName || !username || !role) {
+      throw new Error("Todos los campos marcados con * son obligatorios.");
+    }
+
+    if (!availableRoles.includes(role)) {
+        throw new Error("Rol seleccionado no válido.");
+    }
+    
+    // Step 1: Create the user in auth.users
+    // IMPORTANT: This requires admin privileges (e.g., service_role key)
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: email,
+      password: password,
+      email_confirm: true, // Auto-confirm email for admin-created users
+      user_metadata: { full_name: fullName, role: role } 
+    });
+
+    if (authError) {
+      console.error("Auth Error:", authError);
+      throw new Error(`Error al crear usuario (auth): ${authError.message}`);
+    }
+
+    if (!authData || !authData.user) {
+        throw new Error("No se pudo crear el usuario en el sistema de autenticación.");
+    }
+    const newUserId = authData.user.id;
+
+    // Step 2: Create the profile in the 'profiles' table
+    const profileData: ProfileInsert = {
+      user_id: newUserId, 
+      full_name: fullName,
+      username: username,
+      phone_number: phoneNumber,
+      role: role,
+    };
+
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .insert(profileData);
+
+    if (profileError) {
+      console.error("Profile Error:", profileError);
+      await supabase.auth.admin.deleteUser(newUserId);
+      throw new Error(`Error al crear perfil de usuario: ${profileError.message}. Se ha revertido la creación del usuario en autenticación.`);
+    }
+
+    formSuccess = `Usuario ${email} creado exitosamente.`;
+    // Astro.response.headers.set('HX-Redirect', '/dashboard/usuarios?success=' + encodeURIComponent(formSuccess)); 
+    // return new Response(null, { status: 303, headers: { Location: '/dashboard/usuarios?success=' + encodeURIComponent(formSuccess) } });
+
+  } catch (error: any) {
+    console.error("Form submission error:", error);
+    formError = error.message;
+  }
+}
+
+const pageTitle = "Crear Nuevo Usuario";
+---
+
+<Layout title={pageTitle}>
+  <div class="container mx-auto px-4 py-8 max-w-2xl">
+    <a href="/dashboard/usuarios" class="text-pink-600 hover:text-pink-800 mb-6 inline-block">&larr; Volver a la lista de usuarios</a>
+    <h1 class="text-3xl font-bold text-gray-800 mb-8 flex items-center">
+      <FaUserPlus class="mr-3 text-pink-500" size={36} />
+      {pageTitle}
+    </h1>
+
+    {formError && (
+      <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+        <p class="font-bold flex items-center"><FaExclamationTriangle class="mr-2"/>Error</p>
+        <p>{formError}</p>
+      </div>
+    )}
+    {formSuccess && (
+      <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+        <p class="font-bold">Éxito</p>
+        <p>{formSuccess}</p>
+        <p class="mt-2"><a href="/dashboard/usuarios" class="text-green-700 hover:text-green-900 font-semibold">Volver a la lista &rarr;</a></p>
+      </div>
+    )}
+
+    {!formSuccess && (
+    <form method="POST" class="bg-white shadow-xl rounded-lg p-8 space-y-6">
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico <span class="text-red-500">*</span></label>
+        <input type="email" name="email" id="email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700">Contraseña <span class="text-red-500">*</span></label>
+        <input type="password" name="password" id="password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+        <p class="mt-1 text-xs text-gray-500">La contraseña debe tener al menos 6 caracteres.</p>
+      </div>
+
+      <div>
+        <label for="full_name" class="block text-sm font-medium text-gray-700">Nombre Completo <span class="text-red-500">*</span></label>
+        <input type="text" name="full_name" id="full_name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+      </div>
+
+      <div>
+        <label for="username" class="block text-sm font-medium text-gray-700">Nombre de Usuario (username) <span class="text-red-500">*</span></label>
+        <input type="text" name="username" id="username" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+      </div>
+
+      <div>
+        <label for="phone_number" class="block text-sm font-medium text-gray-700">Número de Teléfono</label>
+        <input type="tel" name="phone_number" id="phone_number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+      </div>
+
+      <div>
+        <label for="role" class="block text-sm font-medium text-gray-700">Rol <span class="text-red-500">*</span></label>
+        <select name="role" id="role" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+          {availableRoles.map(r => <option value={r}>{r}</option>)}
+        </select>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50">
+          Crear Usuario
+        </button>
+      </div>
+    </form>
+    )}
+  </div>
+</Layout>

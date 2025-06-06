@@ -83,10 +83,12 @@ import { supabase } from "../../lib/supabase";
 
         <!-- Gestión de usuarios -->
         <div class="flex flex-col items-center">
-          <CardAdministrar>
-            <i class="text-5xl text-purple-600"><FaUserAlt /></i>
-          </CardAdministrar>
-          <h1 class="mt-2 text-center font-semibold text-gray-700">Gestión de usuarios / adoptantes</h1>
+          <a href="/dashboard/usuarios" class="flex flex-col items-center no-underline hover:opacity-80 transition-opacity">
+            <CardAdministrar>
+              <i class="text-5xl text-purple-600"><FaUserAlt /></i>
+            </CardAdministrar>
+            <h1 class="mt-2 text-center font-semibold text-gray-700">Gestión de usuarios / adoptantes</h1>
+          </a>
         </div>
 
         <!-- Gestión de solicitudes -->
