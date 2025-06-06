@@ -10,7 +10,7 @@ import Providers from '../components/Providers';
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{Astro.props.title}</title>
 	</head>
 	<body class="bg-gradient-to-b from-pink-50 to-purple-50">
 		<Providers>
@@ -27,5 +27,6 @@ import Providers from '../components/Providers';
 		height: 100%;
 		background-color: #000;
 		color: #fff;
+		height: fit-content;
 	}
 </style>

@@ -13,6 +13,7 @@ export interface AnimalInfo {
   breed: string;
   location: string;
   description: string;
+  image_url: string;
 }
 
 export interface VideoItem {
@@ -66,8 +67,9 @@ export default function VideoPlayer({
     // Only prevent default if the swipe is predominantly vertical
     const currentY = e.touches[0].clientY;
     setTouchCurrentY(currentY);
-    if (Math.abs(touchStartY - currentY) > 10 && e.cancelable) { // Add a small threshold to confirm vertical swipe intention
-        e.preventDefault();
+    if (Math.abs(touchStartY - currentY) > 10 && e.cancelable) {
+      // Add a small threshold to confirm vertical swipe intention
+      e.preventDefault();
     }
   };
 
@@ -75,11 +77,15 @@ export default function VideoPlayer({
     const currentVideoElement = videoRefs.current[currentIndex];
     if (!currentVideoElement) return;
 
-    if (currentVideoElement.paused) { // Video is paused or ended, so play it
-      currentVideoElement.play().catch(error => console.error("Error playing video:", error));
+    if (currentVideoElement.paused) {
+      // Video is paused or ended, so play it
+      currentVideoElement
+        .play()
+        .catch((error) => console.error("Error playing video:", error));
       setIsVideoPaused(false);
       setShowPlayButton(false); // Hide play button when video plays
-    } else { // Video is playing, so pause it
+    } else {
+      // Video is playing, so pause it
       currentVideoElement.pause();
       setIsVideoPaused(true);
       setShowPlayButton(true); // Show play button when video pauses
@@ -93,9 +99,11 @@ export default function VideoPlayer({
     const threshold = 50; // Minimum swipe distance in pixels
 
     if (Math.abs(deltaY) > threshold) {
-      if (deltaY > 0) { // Swiped up
+      if (deltaY > 0) {
+        // Swiped up
         goToNextVideo();
-      } else { // Swiped down
+      } else {
+        // Swiped down
         goToPreviousVideo();
       }
     }
@@ -115,8 +123,12 @@ export default function VideoPlayer({
     const currentVideoElement = videoRefs.current[currentIndex];
     if (currentVideoElement) {
       // If the video was paused (e.g., by opening the modal), play it.
-      if (currentVideoElement.paused) { 
-         currentVideoElement.play().catch(error => console.error("Error playing video on modal close:", error));
+      if (currentVideoElement.paused) {
+        currentVideoElement
+          .play()
+          .catch((error) =>
+            console.error("Error playing video on modal close:", error)
+          );
       }
       // Reflect that video is intended to be playing.
       setIsVideoPaused(false);
@@ -149,7 +161,11 @@ export default function VideoPlayer({
           // Play the current video if it's paused
           if (videoEl.paused) {
             videoEl.currentTime = 0; // Reset time
-            videoEl.play().catch(error => console.error(`Error playing video ${index}:`, error));
+            videoEl
+              .play()
+              .catch((error) =>
+                console.error(`Error playing video ${index}:`, error)
+              );
           }
           setIsVideoPaused(false); // Current video is intended to be playing
           setShowPlayButton(false); // Hide play button
@@ -163,7 +179,6 @@ export default function VideoPlayer({
       }
     });
   }, [currentIndex, videos]); // Added videos to dependency array
-
 
   const currentVideo = videos[currentIndex];
 
@@ -373,6 +388,16 @@ export default function VideoPlayer({
               animalInfo={videos[currentIndex]?.animalInfo}
             />
           )}
+          <div className="flex items-center gap-2 bg-white rounded-full px-3 py-2 fixed top-5 right-5">
+            <img
+              src={videos[currentIndex]?.animalInfo?.image_url}
+              alt=""
+              className="w-12 h-12 object-cover rounded-full"
+            />
+            <p className="text-xl font-bold text-black">
+              {videos[currentIndex]?.animalInfo?.name}
+            </p>
+          </div>
         </div>
       )}
 

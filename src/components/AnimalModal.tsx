@@ -9,6 +9,7 @@ interface AnimalModalProps {
     breed: string;
     location: string;
     description: string;
+    image_url: string;
   };
 }
 
@@ -45,7 +46,7 @@ export default function AnimalModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4 overflow-y-auto pointer-events-auto"
+      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4 overflow-y-auto pointer-events-auto text-black"
       onClick={handleBackdropClick}
       style={{
         backdropFilter: "blur(4px)",
@@ -89,7 +90,7 @@ export default function AnimalModal({
             <div className="space-y-4">
               <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-lg overflow-hidden">
                 <img
-                  src="/placeholder-animal.jpg"
+                  src={animalInfo.image_url}
                   alt={animalInfo.name}
                   className="w-full h-48 object-cover"
                 />

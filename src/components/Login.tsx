@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { MdPets } from "react-icons/md";
 import { CgProfile } from "react-icons/cg";
 import { TbLockPassword } from "react-icons/tb";
@@ -43,7 +43,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-pink-50 to-purple-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-pink-50 to-purple-50 text-black">
       <div className="p-4">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
@@ -180,7 +180,7 @@ export default function Login() {
                       Iniciando sesión...
                     </>
                   ) : (
-                    'Iniciar Sesión'
+                    "Iniciar Sesión"
                   )}
                 </button>
               </div>
