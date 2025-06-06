@@ -1,6 +1,9 @@
 ---
 // Role-based access control
 const { data: {session: adminSession} } = await supabase.auth.getSession();
+if (!adminSession) {
+  return Astro.redirect('/'); // Redirect to homepage if not logged in
+}
 const {data: adminUser} = await supabase.from("profiles").select("*").eq("user_id", adminSession?.user.id).single()
 if (!adminSession || adminUser?.role !== 'Admin') {
   return Astro.redirect('/');
@@ -24,7 +27,7 @@ if (Astro.request.method === "POST") {
   const animalId = formData.get("animalId");
 
   if (action === "delete" && animalId) {
-    const { error: deleteError } = await supabase.from('animals').delete().eq('id', animalId.toString());
+    const { error: deleteError } = await supabase.from('animals').delete().eq('id', Number(animalId));
     if (deleteError) {
       console.error('Error deleting animal:', deleteError.message);
       // Redirect with an error query parameter to display feedback
@@ -46,13 +49,13 @@ const errorParam = url.searchParams.get('error');
 <Layout title="Gestión de Animales - Dashboard">
   <div class="container mx-auto p-4 md:p-8 max-w-6xl">
     <header class="mb-8 flex items-center justify-between">
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2">
         <a href="/dashboard" class="text-2xl text-purple-600 hover:text-purple-800 transition" aria-label="Volver al Dashboard">
-          <FaArrowLeft />
+          <FaArrowLeft size={20} />
         </a>
-        <h1 class="text-3xl font-bold text-gray-800">Gestión de Animales</h1>
+        <h1 class="text-sm font-bold text-gray-800">Gestión de Animales</h1>
       </div>
-      <a href="/dashboard/animales/crear" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 flex items-center">
+      <a href="/dashboard/animales/crear" class="bg-purple-600 text-xs hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors duration-200 flex items-center">
         <FaPlus className="mr-2" /> Crear Nuevo Animal
       </a>
     </header>
@@ -93,7 +96,7 @@ const errorParam = url.searchParams.get('error');
             
           {animals && animals.length > 0 ? animals.map(animal => (
             <tr key={animal.id} class="hover:bg-gray-50 transition-colors duration-150">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" title={animal.id}>{animal.id.substring(0, 8)}...</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700" title={animal.id}>{String(animal.id).substring(0, 8)}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{animal.name}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{animal.species}</td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{animal.age}</td>

@@ -1,9 +1,11 @@
 ---
 // Role-based access control
 const { data: {session} } = await supabase.auth.getSession();
+if (!session) {
+  return Astro.redirect('/'); // Redirect to homepage if not logged in
+}
 const {data: user} =await  supabase.from("profiles").select("*").eq("user_id", session?.user.id).single()
-console.log(user)
-if (!session || user.role !== 'Admin') {
+if (!session || user?.role !== 'Admin') {
   return Astro.redirect('/'); // Redirect to homepage if not admin or not logged in
 }
 

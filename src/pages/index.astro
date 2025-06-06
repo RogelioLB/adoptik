@@ -1,53 +1,76 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import VideoPlayer from '../components/VideoPlayer';
 import LayoutWithBottomNav from '../layouts/LayoutWithBottomNav.astro';
+import VideoPlayer from '../components/VideoPlayer';
+import { supabase } from '../lib/supabase'; // Import Supabase client
 
-// Datos iniciales para los videos
-const initialVideos = [
-  {
-    id: '1',
-    src: '/videos/video.mp4',
-    likes: 1234,
-    comments: 456,
-    shares: 789,
-    animalInfo: {
-      name: 'Max',
-      age: '2 años',
-      breed: 'Golden Retriever',
-      location: 'Madrid, España',
-      description: 'Max es un perro muy cariñoso y juguetón. Le encanta correr en el parque y jugar con la pelota. Es muy bueno con los niños y se lleva bien con otros perros.'
-    }
-  },
-  {
-    id: '2',
-    src: '/videos/video2.mp4',
-    likes: 987,
-    comments: 321,
-    shares: 654,
-    animalInfo: {
-      name: 'Luna',
-      age: '1.5 años',
-      breed: 'Gato Siamés',
-      location: 'Barcelona, España',
-      description: 'Luna es una gata tranquila y cariñosa. Le gusta dormir en lugares cómodos y recibir mimos. Es muy limpia y ya está esterilizada.'
-    }
-  },
-  {
-    id: '3',
-    src: '/videos/gato.mp4',
-    likes: 567,
-    comments: 890,
-    shares: 123,
-    animalInfo: {
-      name: 'Rocky',
-      age: '3 años',
-      breed: 'Bulldog Francés',
-      location: 'Valencia, España',
-      description: 'Rocky es un perro tranquilo y amigable. Le encanta pasear y dormir la siesta. Es perfecto para vivir en un piso y se lleva bien con todo el mundo.'
-    }
+// Fetch initial videos from Supabase
+let initialVideos = [];
+try {
+  const { data: fetchedVideos, error } = await supabase
+    .from('videos') // Query the 'videos' table
+    .select(`
+      id,         
+      video_url,   
+      likes,
+      shares,
+      animals (    
+        name,        
+        age,       
+        species,   
+        description,
+        image_url 
+      )
+    `)
+    .limit(5); // Fetch, for example, the first 5 videos
+
+
+  if (error) {
+    console.error('Error fetching initial videos from Supabase:', error.message);
+  } else if (fetchedVideos) {
+    initialVideos = fetchedVideos.map(video => {
+      const animalData = video.animals; // Access the joined animal data
+      return {
+        id: video.id.toString(),
+        src: video.video_url || '/videos/default.mp4',
+        likes: video.likes || 0,
+        comments: 0, // 'videos' table does not have a comments field
+        shares: video.shares || 0,
+        animalInfo: animalData ? {
+          name: animalData.name || 'Nombre no disponible',
+          // Ensure age is formatted as a string if it's a number
+          age: animalData.age !== null && animalData.age !== undefined ? animalData.age.toString() + ' años' : 'Edad no disponible',
+          breed: animalData.species || 'Especie no disponible', // Using species as breed
+          location: 'Ubicación no disponible', // 'animals' table does not have location
+          description: animalData.description || 'Descripción no disponible',
+          image_url: animalData.image_url || '/placeholder-animal.jpg',
+          } : {
+          name: 'Información del animal no disponible',
+          age: 'Edad no disponible',
+          breed: 'Especie no disponible',
+          location: 'Ubicación no disponible',
+          description: 'Descripción no disponible',
+          image_url: '/placeholder-animal.jpg',
+        }
+      };
+    });
   }
-];
+} catch (e) {
+  console.error('Exception when fetching initial videos:', e.message);
+  // Handle exception (e.g., network error)
+}
+
+// If no videos were fetched, provide a default or empty state
+if (initialVideos.length === 0) {
+  console.warn('No initial videos loaded from Supabase. Displaying empty or placeholder content.');
+  // You might want to set a default video or a message for the user
+  // For example:
+  // initialVideos = [{
+  //   id: 'default-0',
+  //   src: '/videos/placeholder.mp4',
+  //   likes: 0, comments: 0, shares: 0,
+  //   animalInfo: { name: 'No hay videos', age: '', breed: '', location: '', description: 'Intenta de nuevo más tarde.' }
+  // }];
+}
 ---
 <LayoutWithBottomNav>
     <VideoPlayer 

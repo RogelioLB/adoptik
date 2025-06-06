@@ -1,0 +1,89 @@
+---
+import { supabase } from "../../../../lib/supabase";
+import Layout from "../../../../layouts/Layout.astro"; // Assuming this layout exists
+// import type { APIRoute } from "astro"; // No longer needed as POST is handled by React component
+
+// Role-based access control
+const { data: {session: adminSession} } = await supabase.auth.getSession();
+if (!adminSession) {
+  return Astro.redirect('/'); // Redirect to homepage if not logged in
+} 
+const {data: adminUser} = await supabase.from("profiles").select("role").eq("user_id", adminSession?.user.id).single()
+if (!adminSession || adminUser?.role !== 'Admin') {
+  return Astro.redirect('/');
+}
+
+const { animalId } = Astro.params;
+let animal: any = null; // Consider using Database['public']['Tables']['animals']['Row'] type
+let videos: any[] = []; // Consider using Database['public']['Tables']['videos']['Row'][] type
+let fetchError: string | null = null;
+
+if (!animalId || typeof animalId !== 'string' || isNaN(parseInt(animalId))) {
+  fetchError = "ID de animal inválido o no proporcionado.";
+  // Consider Astro.response.status = 400 or 404 for SEO and client feedback
+} else {
+  const numericAnimalId = parseInt(animalId);
+  const { data: animalData, error: animalDbError } = await supabase
+    .from("animals")
+    .select("id, name, description, image_url, age, species")
+    .eq("id", numericAnimalId)
+    .single();
+
+  if (animalDbError) {
+    fetchError = `Error al cargar los datos del animal: ${animalDbError.message}`;
+    console.error('Error fetching animal:', animalDbError);
+  } else if (!animalData) {
+    fetchError = "Animal no encontrado.";
+    // Consider Astro.response.status = 404;
+  } else {
+    animal = animalData;
+    const { data: videosData, error: videosDbError } = await supabase
+      .from("videos")
+      .select("id, video_url")
+      .eq("animal_id", animal.id);
+
+    if (videosDbError) {
+      console.error('Error fetching videos:', videosDbError.message);
+      // Optionally set a non-critical error message for videos part
+      // fetchError = fetchError ? `${fetchError} (y error cargando videos)` : 'Error cargando videos.';
+    } else {
+      videos = videosData || [];
+    }
+  }
+}
+
+// POST handler is now removed, logic moved to AnimalEditor.tsx
+
+const pageTitle = animal ? `Editar ${animal.name}` : "Editar Animal";
+
+// Import the React component
+import AnimalEditor from "../../../../components/AnimalEditor.tsx";
+---
+
+
+<Layout title={pageTitle}>
+  <div class="container mx-auto px-4 py-8">
+    {fetchError && (
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+        <strong class="font-bold">Error al cargar la página:</strong>
+        <span class="block sm:inline">{fetchError}</span>
+      </div>
+    )}
+
+    {animal && animalId && (
+      <AnimalEditor 
+        client:load
+        initialAnimalData={animal}
+        initialVideosData={videos}
+        animalId={parseInt(animalId)} 
+      />
+    )}
+    
+    {!animal && !fetchError && (
+      <div class="text-center py-10">
+        <p class="text-xl text-gray-500">Cargando datos del animal...</p>
+        {/* You could add a spinner here */}
+      </div>
+    )}
+  </div>
+</Layout>
