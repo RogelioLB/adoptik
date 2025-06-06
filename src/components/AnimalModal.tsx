@@ -10,6 +10,7 @@ interface AnimalModalProps {
     location: string;
     description: string;
     image_url: string;
+    id: string;
   };
 }
 
@@ -54,7 +55,7 @@ export default function AnimalModal({
       }}
     >
       <div
-        className="bg-white rounded-lg max-w-md w-full my-8 overflow-hidden shadow-xl transform transition-all"
+        className="bg-white rounded-lg max-w-md w-full h-full my-8 overflow-y-hidden shadow-xl transform transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
@@ -116,7 +117,8 @@ export default function AnimalModal({
               </div>
 
               <div className="pt-4">
-                <button
+                <a
+                  href={`/formulario/${animalInfo.id}`}
                   className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-3 px-6 rounded-lg font-medium hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -124,7 +126,7 @@ export default function AnimalModal({
                   }}
                 >
                   ¡Quiero adoptar!
-                </button>
+                </a>
               </div>
             </div>
           ) : (

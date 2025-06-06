@@ -27,26 +27,26 @@ export interface VideoItem {
 
 interface VideoPlayerProps {
   initialVideos?: VideoItem[];
-  loadMoreVideos?: (page: number) => Promise<VideoItem[]>;
 }
 
-export default function VideoPlayer({
-  initialVideos = [],
-  loadMoreVideos,
-}: VideoPlayerProps) {
+export default function VideoPlayer({ initialVideos = [] }: VideoPlayerProps) {
   const [videos, setVideos] = useState<VideoItem[]>(initialVideos);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [isVideoPaused, setIsVideoPaused] = useState<boolean>(false);
   const [showPlayButton, setShowPlayButton] = useState<boolean>(false);
-  const [isScrolling, setIsScrolling] = useState<boolean>(false);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [touchCurrentY, setTouchCurrentY] = useState<number | null>(null);
 
+  const loadMoreVideos = async (page: number) => {
+    const response = await fetch(`/api/videos/get?page=${page}`);
+    const videos = await response.json();
+    return videos;
+  };
   const goToNextVideo = () => {
     if (currentIndex < videos.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -148,7 +148,6 @@ export default function VideoPlayer({
 
   useEffect(() => {
     if (!containerRef.current || videos.length === 0) return;
-
     const videosHeight = containerRef.current.scrollHeight / videos.length;
     containerRef.current.scrollTo({
       top: currentIndex * videosHeight,
@@ -178,7 +177,15 @@ export default function VideoPlayer({
         }
       }
     });
-  }, [currentIndex, videos]); // Added videos to dependency array
+  }, [currentIndex, videos]);
+
+  useEffect(() => {
+    if (currentIndex >= videos.length - 1)
+      loadMoreVideos(page).then((videos) => {
+        setVideos((prevVideos) => [...prevVideos, ...videos]);
+        if (videos.length > 0) setPage((prevPage) => prevPage + 1);
+      });
+  }, [page, currentIndex]);
 
   const currentVideo = videos[currentIndex];
 
